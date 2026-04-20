@@ -36,11 +36,11 @@ License.
 
 
 # python imports
-import keras
+from tensorflow import keras
 import numpy as np
 import tensorflow as tf
-import keras.backend as K
-from keras.layers import Layer
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Layer
 
 # project imports
 from ext.lab2im import utils
@@ -203,7 +203,7 @@ class RandomSpatialDeformation(Layer):
                           zip(self.inter_method, inputs)]
             else:
                 rand_trans = tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_deform))
-                inputs = [K.switch(rand_trans, nrn_layers.SpatialTransformer(m)([v] + list_trans), v)
+                inputs = [tf.where(rand_trans, nrn_layers.SpatialTransformer(m)([v] + list_trans), v)
                           for (m, v) in zip(self.inter_method, inputs)]
         if self.n_inputs < 2:
             return tf.cast(inputs[0], types[0])
@@ -419,12 +419,12 @@ class RandomFlip(Layer):
             return tf.cast(inputs[0], types[0])
 
     def _single_swap(self, inputs):
-        return K.switch(inputs[1], tf.gather(self.swap_lut, inputs[0]), inputs[0])
+        return tf.where(inputs[1], tf.gather(self.swap_lut, inputs[0]), inputs[0])
 
     @staticmethod
     def _single_flip(inputs):
         flip_axis = tf.where(inputs[1])
-        return K.switch(tf.equal(tf.size(flip_axis), 0), inputs[0], tf.reverse(inputs[0], axis=flip_axis[..., 0]))
+        return tf.where(tf.equal(tf.size(flip_axis), 0), inputs[0], tf.reverse(inputs[0], axis=flip_axis[..., 0]))
 
 
 class SampleConditionalGMM(Layer):
@@ -618,14 +618,14 @@ class SampleResolution(Layer):
         # sample isotropic resolution only
         elif (self.max_res_iso is not None) & (self.max_res_aniso is None):
             new_resolution_iso = tf.random.uniform(shape, minval=self.min_res, maxval=self.max_res_iso)
-            new_resolution = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
+            new_resolution = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
                                       self.min_res_tens,
                                       new_resolution_iso)
 
         # sample anisotropic resolution only
         elif (self.max_res_iso is None) & (self.max_res_aniso is not None):
             new_resolution_aniso = tf.random.uniform(shape, minval=self.min_res, maxval=self.max_res_aniso)
-            new_resolution = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
+            new_resolution = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
                                       self.min_res_tens,
                                       tf.where(mask, new_resolution_aniso, self.min_res_tens))
 
@@ -633,10 +633,10 @@ class SampleResolution(Layer):
         else:
             new_resolution_iso = tf.random.uniform(shape, minval=self.min_res, maxval=self.max_res_iso)
             new_resolution_aniso = tf.random.uniform(shape, minval=self.min_res, maxval=self.max_res_aniso)
-            new_resolution = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_iso)),
+            new_resolution = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_iso)),
                                       new_resolution_iso,
                                       tf.where(mask, new_resolution_aniso, self.min_res_tens))
-            new_resolution = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
+            new_resolution = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_min)),
                                       self.min_res_tens,
                                       new_resolution)
 
@@ -958,7 +958,7 @@ class MimicAcquisition(Layer):
             if self.prob_noise == 1:
                 vol += noise
             else:
-                vol = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_noise)), vol + noise, vol)
+                vol = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_noise)), vol + noise, vol)
 
         # upsample
         up_loc = tf.tile(self.up_grid, tf.concat([batchsize, tf.ones([self.n_dims + 1], dtype='int32')], axis=0))
@@ -1089,9 +1089,9 @@ class BiasFieldCorruption(Layer):
             else:
                 rand_trans = tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob))
                 if self.several_inputs:
-                    return [K.switch(rand_trans, tf.math.multiply(bias_field, v), v) for v in inputs]
+                    return [tf.where(rand_trans, tf.math.multiply(bias_field, v), v) for v in inputs]
                 else:
-                    return K.switch(rand_trans, tf.math.multiply(bias_field, inputs[0]), inputs[0])
+                    return tf.where(rand_trans, tf.math.multiply(bias_field, inputs[0]), inputs[0])
 
         else:
             return inputs
@@ -1207,7 +1207,7 @@ class IntensityAugmentation(Layer):
             if self.prob_noise == 1:
                 inputs = inputs + noise
             else:
-                inputs = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_noise)),
+                inputs = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_noise)),
                                   inputs + noise, inputs)
 
         # clip images to given values
@@ -1241,7 +1241,7 @@ class IntensityAugmentation(Layer):
             if self.prob_gamma == 1:
                 inputs = tf.math.pow(inputs, tf.math.exp(gamma))
             else:
-                inputs = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_gamma)),
+                inputs = tf.where(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_gamma)),
                                   tf.math.pow(inputs, tf.math.exp(gamma)), inputs)
 
         # apply random contrast inversion
@@ -1258,7 +1258,7 @@ class IntensityAugmentation(Layer):
 
     @staticmethod
     def _single_invert(inputs):
-        return K.switch(tf.squeeze(inputs[1]), 1 - inputs[0], inputs[0])
+        return tf.where(tf.squeeze(inputs[1]), 1 - inputs[0], inputs[0])
 
 
 class DiceLoss(Layer):
@@ -1839,7 +1839,7 @@ class MaskEdges(Layer):
             mask = mask * tmp_mask
 
         # mask second_channel
-        tensor = K.switch(tf.squeeze(K.greater(tf.random.uniform([1], 0, 1), 1 - self.prob_mask)),
+        tensor = tf.where(tf.squeeze(K.greater(tf.random.uniform([1], 0, 1), 1 - self.prob_mask)),
                           inputs * mask,
                           inputs)
 
@@ -2038,19 +2038,19 @@ class RandomDilationErosion(Layer):
             return inputs * tf.cast(mask, dtype=inputs.dtype)
 
     def _sample_factor(self, inputs):
-        return tf.cast(K.switch(K.less(tf.squeeze(inputs[0]), 0),
+        return tf.cast(tf.where(K.less(tf.squeeze(inputs[0]), 0),
                                 tf.random.uniform((1,), self.min_factor, self.max_factor, dtype='int32'),
                                 tf.random.uniform((1,), self.min_factor, self.max_factor_dilate, dtype='int32')),
                        dtype='float32')
 
     def _single_blur(self, inputs):
         # dilate...
-        new_mask = K.switch(K.greater(tf.squeeze(inputs[2]), 1 - self.prob + 0.001),
+        new_mask = tf.where(K.greater(tf.squeeze(inputs[2]), 1 - self.prob + 0.001),
                             tf.cast(tf.greater(tf.squeeze(self.convnd(tf.expand_dims(inputs[0], 0), inputs[1],
                                     [1] * (self.n_dims + 2), padding='SAME'), axis=0), 0.01), dtype='float32'),
                             inputs[0])
         # ...or erode
-        new_mask = K.switch(K.less(tf.squeeze(inputs[2]), - (1 - self.prob + 0.001)),
+        new_mask = tf.where(K.less(tf.squeeze(inputs[2]), - (1 - self.prob + 0.001)),
                             1 - tf.cast(tf.greater(tf.squeeze(self.convnd(tf.expand_dims(1 - new_mask, 0), inputs[1],
                                         [1] * (self.n_dims + 2), padding='SAME'), axis=0), 0.01), dtype='float32'),
                             new_mask)

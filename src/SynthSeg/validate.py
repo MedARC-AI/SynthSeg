@@ -20,7 +20,7 @@ import re
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.python.summary.summary_iterator import summary_iterator
+from tensorflow.compat.v1.train import summary_iterator
 
 # project imports
 from SynthSeg.predict import predict

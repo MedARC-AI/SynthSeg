@@ -11,13 +11,12 @@ description = "Domain-agnostic segmentation of brain scans"
 authors = [{name = "Benjamin Billot"}]
 keywords = ["segmentation", "domain-agnostic", "brain"]
 dependencies = [
-    "tensorflow==2.2.0",
-    "Keras==2.3.1",
-    "nibabel==5.0.1",
-    "matplotlib==3.6.2",
-    "h5py==2.10.0",
-    "numpy==1.23.5",
-    "scipy==1.4.1",
+    "tensorflow>=2.13,<2.16",
+    "nibabel>=5.0",
+    "matplotlib>=3.6",
+    "h5py>=3.7",
+    "numpy>=1.24,<2",
+    "scipy>=1.9",
     "platformdirs>=3.0",
 ]
 

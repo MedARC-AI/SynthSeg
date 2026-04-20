@@ -20,12 +20,12 @@ License.
 
 # python imports
 import os
-import keras
+from tensorflow import keras
 import numpy as np
 import tensorflow as tf
-from keras import models
-import keras.callbacks as KC
-from keras.optimizers import Adam
+from tensorflow.keras import models
+import tensorflow.keras.callbacks as KC
+from tensorflow.keras.optimizers import Adam
 from inspect import getmembers, isclass
 
 # project imports
@@ -342,10 +342,10 @@ def train_model(model,
 
     # compile
     if compile_model:
-        model.compile(optimizer=Adam(lr=learning_rate), loss=metrics.IdentityLoss().loss)
+        model.compile(optimizer=Adam(learning_rate=learning_rate), loss=metrics.IdentityLoss().loss)
 
     # fit
-    model.fit_generator(generator,
+    model.fit(generator,
                         epochs=n_epochs,
                         steps_per_epoch=n_steps,
                         callbacks=callbacks,

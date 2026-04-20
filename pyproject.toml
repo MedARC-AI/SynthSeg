@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SynthSeg"
+version = "2.0"
+requires-python = ">=3.8"
+license = {text = "Apache 2.0"}
+description = "Domain-agnostic segmentation of brain scans"
+authors = [{name = "Benjamin Billot"}]
+keywords = ["segmentation", "domain-agnostic", "brain"]
+dependencies = [
+    "tensorflow==2.2.0",
+    "Keras==2.3.1",
+    "nibabel==5.0.1",
+    "matplotlib==3.6.2",
+    "h5py==2.10.0",
+    "numpy==1.23.5",
+    "scipy==1.4.1",
+    "platformdirs>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/BBillot/SynthSeg"
+
+[project.scripts]
+SynthSeg = "SynthSeg.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"SynthSeg" = ["data/**/*.npy"]

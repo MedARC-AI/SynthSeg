@@ -1,3 +1,17 @@
+🆕 Updates for easier installation and usage
+
+Run with [`uvx`](https://docs.astral.sh/uv/guides/tools/):
+```bash
+uvx --from "git+https://github.com/MedARC-AI/SynthSeg.git" \
+  SynthSeg --i input/ --o output/
+```
+Install with `pip`:
+```bash
+pip install git+https://github.com/MedARC-AI/SynthSeg.git
+```
+
+Uses upgraded dependencies for better support of modern GPUs. Official model weights are in the [releases](https://github.com/MedARC-AI/SynthSeg/releases).
+
 # SynthSeg
 
 
